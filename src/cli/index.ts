@@ -27,6 +27,7 @@ import {
   ignoreStdioErrorsForBackgroundDaemon,
   startBackgroundProcess,
 } from './background.js';
+import { REVIEWD_VERSION } from './reviewd-version.js';
 
 type SpecialArg = 'working' | 'staged' | '.';
 
@@ -90,6 +91,8 @@ interface CliOptions {
   background?: boolean;
   context?: number;
   mergeBase?: boolean;
+  reviewdMode?: boolean;
+  reviewdVersion?: boolean;
 }
 
 const program = new Command();
@@ -128,8 +131,15 @@ program
     '--merge-base',
     'resolve the base revision with git merge-base before diffing (Git revision mode only)',
   )
+  .option('--reviewd-mode', 'enable review-loop integration (server hint for reviewd proxy)')
+  .option('--reviewd-version', 'print reviewd fork version and exit')
   .action(async (commitish: string, compareWith: string | undefined, options: CliOptions) => {
     try {
+      if (options.reviewdVersion) {
+        console.log(REVIEWD_VERSION);
+        return;
+      }
+
       const isBackgroundChild = process.env[BACKGROUND_CHILD_ENV] === '1';
       const backgroundMode = options.background || isBackgroundChild;
       let stdinDiff: string | undefined;
@@ -297,6 +307,7 @@ program
         contextLines: options.context,
         diffMode: determineDiffMode(selection, compareWith),
         repoPath,
+        reviewdMode: options.reviewdMode,
         ...(commentImports.length > 0 ? { commentImports } : {}),
       });
 

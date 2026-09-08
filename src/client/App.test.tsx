@@ -13,6 +13,18 @@ import { useDiffComments } from './hooks/useDiffComments';
 import { useViewedFiles } from './hooks/useViewedFiles';
 import { useViewport } from './hooks/useViewport';
 
+vi.mock('./hooks/useReviewdSession', () => ({
+  useReviewdSession: vi.fn(() => ({
+    active: false,
+    session: null,
+    sessions: [],
+    threadCount: 0,
+    submitting: false,
+    submitFeedback: vi.fn(),
+    switchSession: vi.fn(),
+  })),
+}));
+
 // Mock the useViewport hook
 vi.mock('./hooks/useViewport', () => ({
   useViewport: vi.fn(() => ({ isMobile: false, isDesktop: true })),

@@ -30,6 +30,7 @@ import { GitHubIcon } from './components/GitHubIcon';
 import { HelpModal } from './components/HelpModal';
 import { Logo } from './components/Logo';
 import { ReloadButton } from './components/ReloadButton';
+import { ReviewdBar } from './components/ReviewdBar';
 import { RevisionDetailModal } from './components/RevisionDetailModal';
 import { SettingsModal } from './components/SettingsModal';
 import { SparkleAnimation } from './components/SparkleAnimation';
@@ -39,6 +40,7 @@ import { useDiffComments } from './hooks/useDiffComments';
 import { useExpandedLines, type MergedChunk } from './hooks/useExpandedLines';
 import { useFileWatch } from './hooks/useFileWatch';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
+import { useReviewdSession } from './hooks/useReviewdSession';
 import { useLazyDiffRendering } from './hooks/useLazyDiffRendering';
 import { useViewedFiles } from './hooks/useViewedFiles';
 import { useViewport } from './hooks/useViewport';
@@ -203,6 +205,18 @@ function App() {
     diffData?.repositoryId, // Repository identifier for storage isolation
     resolvedSelection?.baseMode,
   );
+
+  const {
+    active: reviewdActive,
+    session: reviewdSession,
+    sessions: reviewdSessions,
+    threadCount: reviewdThreadCount,
+    submitting: reviewdSubmitting,
+    submitFeedback,
+    switchSession: switchReviewdSession,
+  } = useReviewdSession({
+    onClearComments: () => clearAllComments({ resetAppliedCommentImportIds: true }),
+  });
 
   const showMobileCommentsBar = isMobile && threads.length > 0;
   const commentsContextKey = useMemo(() => {
@@ -1216,12 +1230,16 @@ function App() {
             }}
           >
             <h1>
-              <Logo
-                style={{
-                  height: '18px',
-                  color: 'var(--color-github-text-secondary)',
-                }}
-              />
+              {reviewdActive ? (
+                <span className="text-sm font-semibold text-github-text-primary">Review</span>
+              ) : (
+                <Logo
+                  style={{
+                    height: '18px',
+                    color: 'var(--color-github-text-secondary)',
+                  }}
+                />
+              )}
             </h1>
             <div className="flex items-center gap-1">
               <button
@@ -1306,7 +1324,17 @@ function App() {
                 isMobile ? 'gap-3' : 'gap-4'
               }`}
             >
-              {!isMobile && threads.length > 0 && (
+              {reviewdActive && reviewdSession && (
+                <ReviewdBar
+                  session={reviewdSession}
+                  sessions={reviewdSessions}
+                  threadCount={reviewdThreadCount}
+                  submitting={reviewdSubmitting}
+                  onSubmit={() => void submitFeedback()}
+                  onSwitchSession={switchReviewdSession}
+                />
+              )}
+              {!reviewdActive && !isMobile && threads.length > 0 && (
                 <CommentsDropdown
                   commentsCount={threads.length}
                   isCopiedAll={isCopiedAll}
@@ -1449,7 +1477,9 @@ function App() {
                     href="https://github.com/yoshiko-pg/difit"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-github-text-secondary hover:text-github-text-primary transition-colors"
+                    className={`flex items-center gap-2 text-github-text-secondary hover:text-github-text-primary transition-colors ${
+                      reviewdActive ? 'hidden' : ''
+                    }`}
                     title="View on GitHub"
                   >
                     <span className="text-sm">Star on GitHub</span>

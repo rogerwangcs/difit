@@ -59,6 +59,7 @@ interface ServerOptions {
   diffMode?: DiffMode;
   repoPath?: string;
   contextLines?: number;
+  reviewdMode?: boolean;
 }
 
 const GENERATED_STATUS_CACHE_TTL_MS = 60_000;
@@ -803,6 +804,14 @@ export async function startServer(
       threadId,
       version: session.version,
     });
+  });
+
+  app.get('/api/reviewd-config', (_req, res) => {
+    if (!options.reviewdMode) {
+      res.status(404).json({ enabled: false });
+      return;
+    }
+    res.json({ enabled: true });
   });
 
   app.get('/api/comments-json', (req, res) => {
