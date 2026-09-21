@@ -35,10 +35,11 @@ describe('useReviewdSession', () => {
           json: async () => ({
             session_id: 'abc',
             generation,
-            round: 1,
+            submit_seq: 0,
             repo_name: 'sample',
             branch: 'main',
-            state: 'browse',
+            state: 'active',
+            listener_attached: false,
           }),
         } as Response;
       }

@@ -1334,7 +1334,7 @@ function App() {
                   onSwitchSession={switchReviewdSession}
                 />
               )}
-              {!reviewdActive && !isMobile && threads.length > 0 && (
+              {!isMobile && threads.length > 0 && (
                 <CommentsDropdown
                   commentsCount={threads.length}
                   isCopiedAll={isCopiedAll}

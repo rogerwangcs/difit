@@ -5,10 +5,11 @@ import { clearReviewdStorage } from '../../reviewd/reviewdStorage';
 export interface ReviewdSession {
   session_id: string;
   generation: number;
-  round: number;
+  submit_seq: number;
   repo_name: string;
   branch: string;
   state: string;
+  listener_attached?: boolean;
   proxy_url?: string;
   comment_count?: number;
 }
@@ -22,7 +23,7 @@ const DEFAULT_POLL_MS = 2000;
 const STOP_SENTINEL = '---review-loop-stopped---';
 
 function buildDocumentTitle(session: ReviewdSession): string {
-  return `Review · ${session.repo_name} · ${session.branch} · ${session.state} · r${session.round}`;
+  return `Review · ${session.repo_name} · ${session.branch} · ${session.state}`;
 }
 
 async function fetchJson<T>(url: string): Promise<T | null> {
@@ -106,7 +107,7 @@ export function useReviewdSession(options: UseReviewdSessionOptions = {}) {
   }, [poll, pollIntervalMs]);
 
   const submitFeedback = useCallback(async () => {
-    if (!session || session.state !== 'listening' || threadCount < 1 || submitting) {
+    if (!session || !session.listener_attached || threadCount < 1 || submitting) {
       return;
     }
     setSubmitting(true);

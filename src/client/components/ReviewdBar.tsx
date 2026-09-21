@@ -17,7 +17,7 @@ interface ReviewdBarProps {
 
 function sessionLabel(row: ReviewdSession): string {
   const comments = row.comment_count ?? 0;
-  return `${row.repo_name} · ${row.branch} · ${row.state} · r${row.round} · ${comments} comments`;
+  return `${row.repo_name} · ${row.branch} · ${row.state} · ${comments} comments`;
 }
 
 export function ReviewdBar({
@@ -42,13 +42,11 @@ export function ReviewdBar({
         <span>{session.branch}</span>
         <span className="text-github-text-muted">·</span>
         <span>{session.state}</span>
-        <span className="text-github-text-muted">·</span>
-        <span>r{session.round}</span>
       </div>
 
       <ReviewdSubmitButton
         threadCount={threadCount}
-        listening={session.state === 'listening'}
+        listening={session.listener_attached === true}
         submitting={submitting}
         onSubmit={onSubmit}
       />

@@ -26,9 +26,7 @@ export function ReviewdSubmitButton({
         border: '1px solid var(--color-yellow-btn-border)',
       }}
       title={
-        listening
-          ? 'Send comments to the waiting agent'
-          : 'Start review-loop listen to enable submit'
+        listening ? 'Send comments to the waiting agent' : 'Waiting for agent review-loop listen'
       }
     >
       {label}

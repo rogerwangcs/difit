@@ -466,6 +466,44 @@ describe('Server Integration Tests', () => {
       expect(data).toHaveProperty('requestedTargetCommitish', 'HEAD');
     });
 
+    it('POST /api/invalidate clears cache and broadcasts reload to watch clients', async () => {
+      const parser = parserInstances.at(-1);
+      parser?.clearResolvedCommitCache.mockClear();
+
+      const watchResponse = await fetch(`http://localhost:${port}/api/watch`);
+      expect(watchResponse.ok).toBe(true);
+
+      const reader = watchResponse.body?.getReader();
+      expect(reader).toBeDefined();
+
+      const invalidateResponse = await fetch(`http://localhost:${port}/api/invalidate`, {
+        method: 'POST',
+      });
+      expect(invalidateResponse.ok).toBe(true);
+      const invalidateBody = (await invalidateResponse.json()) as { ok: boolean };
+      expect(invalidateBody).toEqual({ ok: true });
+      expect(parser?.clearResolvedCommitCache).toHaveBeenCalled();
+
+      const decoder = new TextDecoder();
+      let events = '';
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const { value, done } = await reader!.read();
+        if (done) {
+          break;
+        }
+        if (value) {
+          events += decoder.decode(value);
+        }
+        if (events.includes('"type":"reload"')) {
+          break;
+        }
+      }
+      await reader!.cancel();
+
+      expect(events).toContain('"type":"reload"');
+      expect(events).toContain('"changeType":"commit"');
+    });
+
     it('GET /api/diff returns a JSON 500 on parse failure and does not poison subsequent requests', async () => {
       const parser = parserInstances.at(-1);
       parser?.parseDiff.mockClear();

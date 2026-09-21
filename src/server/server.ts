@@ -9,7 +9,7 @@ import open from 'open';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-import { type DiffMode } from '../types/watch.js';
+import { DiffMode, type DiffMode as DiffModeType } from '../types/watch.js';
 import { formatCommentsOutput } from '../utils/commentFormatting.js';
 import {
   mergeCommentImports,
@@ -56,7 +56,7 @@ interface ServerOptions {
   clearComments?: boolean;
   commentImports?: CommentImport[];
   keepAlive?: boolean;
-  diffMode?: DiffMode;
+  diffMode?: DiffModeType;
   repoPath?: string;
   contextLines?: number;
   reviewdMode?: boolean;
@@ -804,6 +804,19 @@ export async function startServer(
       threadId,
       version: session.version,
     });
+  });
+
+  app.post('/api/invalidate', (_req, res) => {
+    invalidateCache();
+    const diffMode = options.diffMode ?? DiffMode.DEFAULT;
+    fileWatcher.broadcast({
+      type: 'reload',
+      diffMode,
+      changeType: 'commit',
+      timestamp: new Date().toISOString(),
+      message: 'Diff invalidated by reviewd',
+    });
+    res.json({ ok: true });
   });
 
   app.get('/api/reviewd-config', (_req, res) => {
