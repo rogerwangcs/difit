@@ -9,14 +9,7 @@ import {
   NONE_EDITOR_ID,
   type EditorOptionId,
 } from '../../utils/editorOptions';
-import type { ColorVisionMode } from '../utils/appearanceTheme';
 import { formatAutoViewedPatterns, parseAutoViewedPatterns } from '../utils/autoViewedPatterns';
-import {
-  getFallbackSyntaxTheme,
-  getThemesForResolvedTheme,
-  isSyntaxThemeForResolvedTheme,
-} from '../utils/themeLoader';
-import { Tooltip } from './Tooltip';
 
 interface EditorSettings {
   id: EditorOptionId;
@@ -28,9 +21,7 @@ interface AppearanceSettings {
   fontSize: number;
   fontFamily: string;
   theme: 'light' | 'dark' | 'auto';
-  syntaxTheme: string;
   editor: EditorSettings;
-  colorVision: ColorVisionMode;
   autoViewedPatterns: string[];
 }
 
@@ -48,13 +39,11 @@ const DEFAULT_SETTINGS: AppearanceSettings = {
   fontFamily:
     '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif',
   theme: 'dark',
-  syntaxTheme: 'vsDark',
   editor: {
     id: DEFAULT_EDITOR_OPTION.id,
     command: DEFAULT_EDITOR_OPTION.command,
     argsTemplate: DEFAULT_EDITOR_OPTION.argsTemplate,
   },
-  colorVision: 'normal',
   autoViewedPatterns: [],
 };
 
@@ -69,15 +58,6 @@ const FONT_FAMILIES = [
   { name: 'Fira Code', value: '"Fira Code", "Courier New", monospace' },
   { name: 'JetBrains Mono', value: '"JetBrains Mono", "Courier New", monospace' },
 ];
-
-const COLOR_VISION_MODES = [
-  { id: 'normal', label: 'Normal' },
-  {
-    id: 'deuteranopia',
-    label: 'Deuteranopia',
-    tooltip: 'Deuteranopia mode uses blue/orange instead of green/red for diffs.',
-  },
-] as const;
 
 const SETTINGS_SECTIONS = [
   {
@@ -97,59 +77,17 @@ export function SettingsModal({ isOpen, onClose, settings, onSettingsChange }: S
   const [activeSection, setActiveSection] = useState<SettingsSection>('appearance');
   const { enableScope, disableScope } = useHotkeysContext();
 
-  // Manage scopes when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      // Disable navigation scope when settings modal is open
       disableScope('navigation');
     } else {
-      // Re-enable navigation scope when modal closes
       enableScope('navigation');
     }
 
     return () => {
-      // Cleanup: ensure navigation scope is enabled
       enableScope('navigation');
     };
   }, [isOpen, enableScope, disableScope]);
-
-  // Get current theme (resolve 'auto' to actual theme)
-  const getCurrentTheme = (): 'light' | 'dark' => {
-    if (settings.theme === 'auto') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return settings.theme;
-  };
-
-  // Get available themes based on current background color
-  const getAvailableThemes = () => {
-    return getThemesForResolvedTheme(getCurrentTheme());
-  };
-
-  // Handle theme change and auto-select valid syntax theme
-  const handleThemeChange = (theme: 'light' | 'dark' | 'auto') => {
-    const newSettings = { ...settings, theme };
-
-    // Determine the effective theme
-    const effectiveTheme =
-      theme === 'auto'
-        ? window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light'
-        : theme;
-
-    const isCurrentThemeValid = isSyntaxThemeForResolvedTheme(settings.syntaxTheme, effectiveTheme);
-
-    // If current theme becomes invalid, auto-select first item
-    if (!isCurrentThemeValid) {
-      const firstTheme = getFallbackSyntaxTheme(effectiveTheme);
-      if (firstTheme) {
-        newSettings.syntaxTheme = firstTheme.id;
-      }
-    }
-
-    onSettingsChange(newSettings);
-  };
 
   const handleReset = () => {
     if (activeSection === 'appearance') {
@@ -158,8 +96,6 @@ export function SettingsModal({ isOpen, onClose, settings, onSettingsChange }: S
         fontSize: DEFAULT_SETTINGS.fontSize,
         fontFamily: DEFAULT_SETTINGS.fontFamily,
         theme: DEFAULT_SETTINGS.theme,
-        syntaxTheme: DEFAULT_SETTINGS.syntaxTheme,
-        colorVision: DEFAULT_SETTINGS.colorVision,
       });
       return;
     }
@@ -257,85 +193,6 @@ export function SettingsModal({ isOpen, onClose, settings, onSettingsChange }: S
                     {FONT_FAMILIES.map((font) => (
                       <option key={font.value} value={font.value}>
                         {font.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-github-text-primary mb-2">
-                    Theme
-                  </label>
-                  <div className="flex gap-2">
-                    {(['light', 'dark', 'auto'] as const).map((theme) => (
-                      <button
-                        key={theme}
-                        type="button"
-                        onClick={() => handleThemeChange(theme)}
-                        className={`px-3 py-2 text-sm rounded border transition-colors ${
-                          settings.theme === theme
-                            ? 'bg-github-accent text-white border-github-accent'
-                            : 'bg-github-bg-tertiary text-github-text-secondary border-github-border hover:text-github-text-primary'
-                        }`}
-                      >
-                        {theme.charAt(0).toUpperCase() + theme.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-github-text-primary mb-2">
-                    Color Vision
-                  </label>
-                  <div className="flex gap-2">
-                    {COLOR_VISION_MODES.map((mode) => {
-                      const isSelected = (settings.colorVision ?? 'normal') === mode.id;
-                      const button = (
-                        <button
-                          key={mode.id}
-                          type="button"
-                          onClick={() => onSettingsChange({ ...settings, colorVision: mode.id })}
-                          className={`px-3 py-2 text-sm rounded border transition-colors ${
-                            isSelected
-                              ? 'bg-github-accent text-white border-github-accent'
-                              : 'bg-github-bg-tertiary text-github-text-secondary border-github-border hover:text-github-text-primary'
-                          }`}
-                        >
-                          {mode.label}
-                        </button>
-                      );
-
-                      if (!('tooltip' in mode)) {
-                        return button;
-                      }
-
-                      return (
-                        <Tooltip key={mode.id} content={mode.tooltip}>
-                          {button}
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-github-text-primary mb-2">
-                    Syntax Highlighting Theme
-                  </label>
-                  <select
-                    value={settings.syntaxTheme}
-                    onChange={(e) =>
-                      onSettingsChange({
-                        ...settings,
-                        syntaxTheme: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 bg-github-bg-tertiary border border-github-border rounded text-github-text-primary text-sm"
-                  >
-                    {getAvailableThemes().map((theme) => (
-                      <option key={theme.id} value={theme.id}>
-                        {theme.label}
                       </option>
                     ))}
                   </select>

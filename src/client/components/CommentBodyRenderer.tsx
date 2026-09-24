@@ -8,9 +8,7 @@ import { hasSuggestionBlock, parseSuggestionBlocks } from '../../utils/suggestio
 import { extractMarkdownText, isElementWithCodeProps, isSafeUrl } from '../utils/markdownUtils';
 
 import { DiffCodeLine } from './DiffCodeLine';
-import { PrismSyntaxHighlighter } from './PrismSyntaxHighlighter';
-import type { AppearanceSettings } from './SettingsModal';
-
+import { ShikiSyntaxHighlighter } from './ShikiSyntaxHighlighter';
 const COMMENT_REMARK_PLUGINS = [remarkGfm, remarkBreaks];
 
 const transformCommentUrl = (url: string) => (isSafeUrl(url) ? url : '');
@@ -50,7 +48,7 @@ function SuggestionLines({
   type: 'add' | 'delete';
   filename?: string;
   keyPrefix: string;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
 }) {
   return (
     <>
@@ -86,7 +84,7 @@ function CommentDiffCodeBlock({ code }: { code: string }) {
   );
 }
 
-const getCommentMarkdownComponents = (syntaxTheme?: AppearanceSettings['syntaxTheme']) => ({
+const getCommentMarkdownComponents = (syntaxTheme?: string) => ({
   h1: ({ children }: { children?: React.ReactNode }) => (
     <h1 className="text-lg font-semibold mt-4 mb-2 first:mt-0">{children}</h1>
   ),
@@ -178,7 +176,7 @@ const getCommentMarkdownComponents = (syntaxTheme?: AppearanceSettings['syntaxTh
 
     return (
       <pre className="my-2 rounded-md border border-github-border bg-github-bg-secondary p-3 overflow-x-auto text-xs leading-5">
-        <PrismSyntaxHighlighter
+        <ShikiSyntaxHighlighter
           code={normalizedCodeText}
           language={language}
           syntaxTheme={syntaxTheme}
@@ -221,7 +219,7 @@ interface CommentBodyRendererProps {
   body: string;
   originalCode?: string;
   filename?: string;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
 }
 
 export function hasSuggestionInBody(body: string) {

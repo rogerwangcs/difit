@@ -15,13 +15,13 @@ import {
   type WordLevelDiffResult,
 } from '../utils/wordLevelDiff';
 import { useFileLevelTokensLookup } from '../contexts/FileLevelTokensContext';
+import { getSideBySideLineNumberClass } from '../utils/diffLineStyles';
 
 import { CommentButton } from './CommentButton';
 import { CommentForm } from './CommentForm';
 import { CommentThreadCard } from './CommentThreadCard';
-import { EnhancedPrismSyntaxHighlighter } from './EnhancedPrismSyntaxHighlighter';
+import { EnhancedShikiSyntaxHighlighter } from './EnhancedShikiSyntaxHighlighter';
 import { OpenInEditorButton } from './OpenInEditorButton';
-import type { AppearanceSettings } from './SettingsModal';
 import { WordLevelDiffHighlighter } from './WordLevelDiffHighlighter';
 
 interface SideBySideDiffChunkProps {
@@ -40,7 +40,7 @@ interface SideBySideDiffChunkProps {
   onReplyToThread: (threadId: string, body: string) => Promise<void>;
   onRemoveMessage: (threadId: string, messageId: string) => void;
   onUpdateMessage: (threadId: string, messageId: string, newBody: string) => void;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
   cursor?: CursorPosition | null;
   fileIndex?: number;
   onLineClick?: (
@@ -658,7 +658,7 @@ export function SideBySideDiffChunk({
                   {/* Old side */}
                   <td
                     id={oldLineNavId}
-                    className={`w-[var(--line-number-width)] min-w-[var(--line-number-width)] max-w-[var(--line-number-width)] px-2 text-right text-github-text-muted bg-github-bg-secondary border-r border-github-border select-none align-top relative overflow-visible ${highlightOldCell ? cellHighlightClass : ''}`}
+                    className={`${getSideBySideLineNumberClass(sideLine.oldLine, 'old', isExpandedLine(sideLine.oldLine))} ${highlightOldCell ? cellHighlightClass : ''}`}
                   >
                     <span>{sideLine.oldLineNumber || ''}</span>
                     {hoveredLine?.side === 'old' &&
@@ -699,12 +699,12 @@ export function SideBySideDiffChunk({
                         {sideLine.wordLevelDiff ? (
                           <WordLevelDiffHighlighter
                             segments={sideLine.wordLevelDiff.oldSegments}
-                            className="flex-1 text-github-text-primary whitespace-pre-wrap break-all overflow-wrap-break-word select-text"
+                            className="flex-1 text-code-primary whitespace-pre-wrap break-all overflow-wrap-break-word select-text"
                           />
                         ) : (
-                          <EnhancedPrismSyntaxHighlighter
+                          <EnhancedShikiSyntaxHighlighter
                             code={sideLine.oldLine.content}
-                            className="flex-1 text-github-text-primary whitespace-pre-wrap break-all overflow-wrap-break-word select-text [&_pre]:m-0 [&_pre]:p-0 [&_pre]:!bg-transparent [&_pre]:font-inherit [&_pre]:text-inherit [&_pre]:leading-inherit [&_code]:!bg-transparent [&_code]:font-inherit [&_code]:text-inherit [&_code]:leading-inherit"
+                            className="flex-1 text-code-primary whitespace-pre-wrap break-all overflow-wrap-break-word select-text [&_pre]:m-0 [&_pre]:p-0 [&_pre]:!bg-transparent [&_pre]:font-inherit [&_pre]:text-inherit [&_pre]:leading-inherit [&_code]:!bg-transparent [&_code]:font-inherit [&_code]:text-inherit [&_code]:leading-inherit"
                             syntaxTheme={syntaxTheme}
                             filename={filename}
                             precomputedTokens={getProcomputedTokens(
@@ -720,7 +720,7 @@ export function SideBySideDiffChunk({
                   {/* New side */}
                   <td
                     id={newLineNavId}
-                    className={`w-[var(--line-number-width)] min-w-[var(--line-number-width)] max-w-[var(--line-number-width)] px-2 text-right text-github-text-muted bg-github-bg-secondary border-r border-github-border select-none align-top relative overflow-visible ${highlightNewCell ? cellHighlightClass : ''}`}
+                    className={`${getSideBySideLineNumberClass(sideLine.newLine, 'new', isExpandedLine(sideLine.newLine))} ${highlightNewCell ? cellHighlightClass : ''}`}
                   >
                     <span>{sideLine.newLineNumber || ''}</span>
                     {hoveredLine?.side === 'new' &&
@@ -758,12 +758,12 @@ export function SideBySideDiffChunk({
                         {sideLine.wordLevelDiff ? (
                           <WordLevelDiffHighlighter
                             segments={sideLine.wordLevelDiff.newSegments}
-                            className="flex-1 text-github-text-primary whitespace-pre-wrap break-all overflow-wrap-break-word select-text"
+                            className="flex-1 text-code-primary whitespace-pre-wrap break-all overflow-wrap-break-word select-text"
                           />
                         ) : (
-                          <EnhancedPrismSyntaxHighlighter
+                          <EnhancedShikiSyntaxHighlighter
                             code={sideLine.newLine.content}
-                            className="flex-1 text-github-text-primary whitespace-pre-wrap break-all overflow-wrap-break-word select-text [&_pre]:m-0 [&_pre]:p-0 [&_pre]:!bg-transparent [&_pre]:font-inherit [&_pre]:text-inherit [&_pre]:leading-inherit [&_code]:!bg-transparent [&_code]:font-inherit [&_code]:text-inherit [&_code]:leading-inherit"
+                            className="flex-1 text-code-primary whitespace-pre-wrap break-all overflow-wrap-break-word select-text [&_pre]:m-0 [&_pre]:p-0 [&_pre]:!bg-transparent [&_pre]:font-inherit [&_pre]:text-inherit [&_pre]:leading-inherit [&_code]:!bg-transparent [&_code]:font-inherit [&_code]:text-inherit [&_code]:leading-inherit"
                             syntaxTheme={syntaxTheme}
                             filename={filename}
                             precomputedTokens={getProcomputedTokens(

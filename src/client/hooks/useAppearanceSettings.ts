@@ -12,37 +12,22 @@ import {
   APPEARANCE_STORAGE_KEY,
   applyResolvedTheme,
   resolveThemePreference,
-  type ColorVisionMode,
   type ResolvedTheme,
 } from '../utils/appearanceTheme';
-import { getFallbackSyntaxTheme, isSyntaxThemeForResolvedTheme } from '../utils/themeLoader';
 
 const DEFAULT_SETTINGS: AppearanceSettings = {
   fontSize: 14,
   fontFamily:
     '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif',
   theme: 'dark',
-  syntaxTheme: 'vsDark',
   editor: {
     id: DEFAULT_EDITOR_OPTION.id,
     command: DEFAULT_EDITOR_OPTION.command,
     argsTemplate: DEFAULT_EDITOR_OPTION.argsTemplate,
   },
-  colorVision: 'normal',
   autoViewedPatterns: [],
 };
 
-/**
- * Normalise whatever we find under `editor` in localStorage into the current
- * `{id, command, argsTemplate}` shape. Handles three legacy / partial cases so
- * that users upgrading from an older build don't crash on `.trim()` of an
- * undefined field:
- *   - missing / null / unknown type                → default editor preset
- *   - legacy string id (e.g. `'vscode'`, `'none'`) → resolve via preset table
- *   - partial object (e.g. `{ id: 'vscode' }`)     → backfill command/args
- *     from the matching preset; for `custom` keep user-supplied strings but
- *     coerce missing fields to `''`.
- */
 const normalizeEditorSettings = (raw: unknown): AppearanceSettings['editor'] => {
   if (typeof raw === 'string') {
     const preset = resolveEditorOption(raw);
@@ -70,24 +55,34 @@ const normalizeEditorSettings = (raw: unknown): AppearanceSettings['editor'] => 
   return DEFAULT_SETTINGS.editor;
 };
 
-// Key for appearance settings inside the server-persisted client settings object.
 const APPEARANCE_SETTINGS_KEY = 'appearance';
+
+const stripLegacyAppearanceFields = (
+  parsed: Record<string, unknown>,
+): Partial<AppearanceSettings> => {
+  const rest = { ...parsed };
+  delete rest.syntaxTheme;
+  delete rest.colorVision;
+  return rest as Partial<AppearanceSettings>;
+};
 
 const normalizeStoredSettings = (raw: unknown): AppearanceSettings | null => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return null;
   }
 
-  const parsed = raw as Partial<AppearanceSettings> & {
+  const parsed = stripLegacyAppearanceFields(raw as Record<string, unknown>);
+  const candidate = parsed as Partial<AppearanceSettings> & {
     autoViewedPatterns?: unknown;
     editor?: unknown;
   };
 
   return {
     ...DEFAULT_SETTINGS,
-    ...parsed,
-    editor: normalizeEditorSettings(parsed.editor),
-    autoViewedPatterns: normalizeAutoViewedPatterns(parsed.autoViewedPatterns),
+    ...candidate,
+    theme: candidate.theme ?? DEFAULT_SETTINGS.theme,
+    editor: normalizeEditorSettings(candidate.editor),
+    autoViewedPatterns: normalizeAutoViewedPatterns(candidate.autoViewedPatterns),
   };
 };
 
@@ -117,8 +112,30 @@ export function useAppearanceSettings(): UseAppearanceSettingsReturn {
     settingsRef.current = settings;
   }, [settings]);
 
-  // Hydrate from the server-persisted settings (shared across ports); if the
-  // server has none yet but localStorage does, seed the server from it.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(APPEARANCE_STORAGE_KEY);
+      if (!stored) {
+        return;
+      }
+
+      const raw = JSON.parse(stored) as Record<string, unknown>;
+      if (!raw.syntaxTheme && !raw.colorVision) {
+        return;
+      }
+
+      const normalized = normalizeStoredSettings(raw);
+      if (!normalized) {
+        return;
+      }
+
+      localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(normalized));
+      saveClientSettings({ [APPEARANCE_SETTINGS_KEY]: normalized });
+    } catch {
+      // Migration is best-effort.
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -154,12 +171,9 @@ export function useAppearanceSettings(): UseAppearanceSettingsReturn {
     };
   }, []);
 
-  const applyTheme = useCallback(
-    (theme: 'light' | 'dark', colorVision: ColorVisionMode = 'normal') => {
-      applyResolvedTheme(theme, colorVision);
-    },
-    [],
-  );
+  const applyTheme = useCallback((theme: ResolvedTheme) => {
+    applyResolvedTheme(theme);
+  }, []);
 
   const saveSettings = useCallback((newSettings: AppearanceSettings) => {
     try {
@@ -170,45 +184,14 @@ export function useAppearanceSettings(): UseAppearanceSettingsReturn {
     saveClientSettings({ [APPEARANCE_SETTINGS_KEY]: newSettings });
   }, []);
 
-  const getSettingsForResolvedTheme = useCallback(
-    (currentSettings: AppearanceSettings, resolvedTheme: ResolvedTheme) => {
-      if (isSyntaxThemeForResolvedTheme(currentSettings.syntaxTheme, resolvedTheme)) {
-        return currentSettings;
-      }
-
-      const fallbackSyntaxTheme = getFallbackSyntaxTheme(resolvedTheme);
-      if (!fallbackSyntaxTheme) {
-        return currentSettings;
-      }
-
-      return {
-        ...currentSettings,
-        syntaxTheme: fallbackSyntaxTheme.id,
-      };
-    },
-    [],
-  );
-
-  // Apply settings to document
   useEffect(() => {
     const root = document.documentElement;
 
-    // Apply font size
     root.style.setProperty('--app-font-size', `${settings.fontSize}px`);
-
-    // Apply font family
     root.style.setProperty('--app-font-family', settings.fontFamily);
 
-    // Apply theme
-    const colorVision = settings.colorVision ?? 'normal';
     const applyResolvedAppearance = (resolvedTheme: ResolvedTheme) => {
-      applyTheme(resolvedTheme, colorVision);
-
-      const nextSettings = getSettingsForResolvedTheme(settings, resolvedTheme);
-      if (nextSettings !== settings) {
-        setSettings(nextSettings);
-        saveSettings(nextSettings);
-      }
+      applyTheme(resolvedTheme);
     };
 
     if (settings.theme === 'auto') {
@@ -227,7 +210,7 @@ export function useAppearanceSettings(): UseAppearanceSettingsReturn {
       applyResolvedAppearance(settings.theme);
       return undefined;
     }
-  }, [settings, applyTheme, getSettingsForResolvedTheme, saveSettings]);
+  }, [settings, applyTheme]);
 
   const updateSettings = useCallback(
     (newSettings: AppearanceSettings) => {

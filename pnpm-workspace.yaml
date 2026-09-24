@@ -7,6 +7,7 @@ allowBuilds:
   esbuild: true
   keytar: true
   lefthook: true
+  node-pty: set this to true or false
 
 onlyBuiltDependencies:
   - '@parcel/watcher'

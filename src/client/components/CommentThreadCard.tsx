@@ -7,13 +7,11 @@ import { copyTextToClipboard } from '../utils/clipboard';
 
 import { CommentBodyRenderer } from './CommentBodyRenderer';
 import { CommentForm } from './CommentForm';
-import type { AppearanceSettings } from './SettingsModal';
-
 interface ThreadMessageItemProps {
   message: DiffCommentMessage;
   isRootMessage?: boolean;
   showAuthorBadge: boolean;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
   filename?: string;
   originalCode?: string;
   onUpdate: (newBody: string) => void;
@@ -197,7 +195,7 @@ interface CommentThreadCardProps {
   onRemoveMessage: (threadId: string, messageId: string) => void;
   onUpdateMessage: (threadId: string, messageId: string, newBody: string) => void;
   onClick?: (e: React.MouseEvent) => void;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
 }
 
 export function CommentThreadCard({

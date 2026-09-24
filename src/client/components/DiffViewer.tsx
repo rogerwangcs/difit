@@ -16,8 +16,6 @@ import { getViewerForFile } from '../viewers/registry';
 import type { DiffViewerBodyProps } from '../viewers/types';
 
 import { DiffViewerHeader } from './DiffViewerHeader';
-import type { AppearanceSettings } from './SettingsModal';
-
 interface DiffViewerProps {
   file: DiffFile;
   threads: CommentThread[];
@@ -42,7 +40,7 @@ interface DiffViewerProps {
   onRemoveMessage: (threadId: string, messageId: string) => void;
   onUpdateMessage: (threadId: string, messageId: string, newBody: string) => void;
   onOpenInEditor?: (filePath: string, lineNumber: number) => void;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
   baseCommitish?: string;
   targetCommitish?: string;
   cursor?: CursorPosition | null;
@@ -363,7 +361,7 @@ export const DiffViewer = memo(function DiffViewer({
   return (
     <div
       ref={containerRef}
-      className="bg-github-bg-primary"
+      className="overflow-hidden rounded-lg border border-github-border bg-github-bg-secondary"
       style={{ '--line-number-width': lineNumberWidth } as React.CSSProperties}
     >
       <DiffViewerHeader
@@ -379,7 +377,7 @@ export const DiffViewer = memo(function DiffViewer({
 
       {!isCollapsed && (
         <FileLevelTokensProvider value={fileLevelTokens}>
-          <div className="overflow-y-auto">
+          <div className="overflow-x-auto bg-github-bg-primary">
             <ViewerComponent {...viewerProps} />
           </div>
         </FileLevelTokensProvider>

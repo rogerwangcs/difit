@@ -4,8 +4,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import type { DiffLine } from '../../types/diff';
-import { EnhancedPrismSyntaxHighlighter } from '../components/EnhancedPrismSyntaxHighlighter';
-import { PrismSyntaxHighlighter } from '../components/PrismSyntaxHighlighter';
+import { EnhancedShikiSyntaxHighlighter } from '../components/EnhancedShikiSyntaxHighlighter';
+import { ShikiSyntaxHighlighter } from '../components/ShikiSyntaxHighlighter';
 import type { MergedChunk } from '../hooks/useExpandedLines';
 import { extractMarkdownText, isElementWithCodeProps, isSafeUrl } from '../utils/markdownUtils';
 
@@ -670,7 +670,7 @@ const getMarkdownComponents = (syntaxTheme?: DiffViewerBodyProps['syntaxTheme'])
 
     return (
       <pre className="border border-github-border bg-github-bg-secondary p-3 overflow-x-auto text-xs">
-        <PrismSyntaxHighlighter
+        <ShikiSyntaxHighlighter
           code={codeText.replace(/\n$/, '')}
           language={language}
           syntaxTheme={syntaxTheme}
@@ -772,7 +772,7 @@ const renderCellContent = (
 
   return (
     <pre className="overflow-x-auto text-xs">
-      <EnhancedPrismSyntaxHighlighter
+      <EnhancedShikiSyntaxHighlighter
         code={content.replace(/\n$/, '')}
         language={language || 'python'}
         syntaxTheme={syntaxTheme}
@@ -810,7 +810,7 @@ const NotebookCodeDiff = ({
             >
               {getCodeLinePrefix(line.type)}
             </span>
-            <EnhancedPrismSyntaxHighlighter
+            <EnhancedShikiSyntaxHighlighter
               code={line.content || ' '}
               language={language || 'python'}
               syntaxTheme={syntaxTheme}

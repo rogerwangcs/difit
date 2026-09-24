@@ -1,7 +1,6 @@
 import type { ComponentType } from 'react';
 
 import type { CommentThread, DiffFile, DiffSide, DiffViewMode, LineNumber } from '../../types/diff';
-import type { AppearanceSettings } from '../components/SettingsModal';
 import type { CursorPosition } from '../hooks/keyboardNavigation';
 import type { MergedChunk } from '../hooks/useExpandedLines';
 
@@ -10,7 +9,7 @@ export type DiffViewerBodyProps = {
   threads: CommentThread[];
   showAuthorBadges?: boolean;
   diffMode: DiffViewMode;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
   baseCommitish?: string;
   targetCommitish?: string;
   cursor?: CursorPosition | null;

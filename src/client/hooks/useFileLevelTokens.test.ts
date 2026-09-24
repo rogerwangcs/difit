@@ -94,8 +94,8 @@ describe('useFileLevelTokens', () => {
 
     const tokensL7 = result.current.getNewTokens?.(7) ?? [];
     expect(tokensL7.length).toBeGreaterThan(0);
-    expect(tokensL7.some((t) => t.types.includes('keyword') && t.content === 'const')).toBe(true);
-    expect(tokensL7.some((t) => t.types.includes('function') && t.content === 'ref')).toBe(true);
+    expect(tokensL7.some((t) => t.content === 'const')).toBe(true);
+    expect(tokensL7.some((t) => t.content === 'ref')).toBe(true);
   });
 
   it('enabled=trueのときVue SFCの<style>ブロック内をCSSとしてトークン化する', async () => {
@@ -115,7 +115,7 @@ describe('useFileLevelTokens', () => {
     });
 
     const tokensL12 = result.current.getNewTokens?.(12) ?? [];
-    expect(tokensL12.some((t) => t.types.includes('property') && t.content === 'color')).toBe(true);
+    expect(tokensL12.some((t) => t.content === 'color')).toBe(true);
   });
 
   it('enabled=falseのときは拡張子に関係なくfetchせずgetterはnullのまま', async () => {
@@ -166,7 +166,7 @@ describe('useFileLevelTokens', () => {
     });
 
     const tokensL1 = result.current.getNewTokens?.(1) ?? [];
-    expect(tokensL1.some((t) => t.types.includes('keyword') && t.content === 'const')).toBe(true);
+    expect(tokensL1.some((t) => t.content === 'const')).toBe(true);
   });
 
   it('2000行を超えるファイルはトークン化せずper-lineにフォールバックする', async () => {
@@ -209,7 +209,7 @@ describe('useFileLevelTokens', () => {
     });
 
     const tokensL1 = result.current.getNewTokens?.(1) ?? [];
-    expect(tokensL1.some((t) => t.types.includes('keyword') && t.content === 'const')).toBe(true);
+    expect(tokensL1.some((t) => t.content === 'const')).toBe(true);
   });
 
   it('reloadKeyが変わるとblobを再フェッチして最新内容でトークン化する', async () => {
@@ -230,7 +230,7 @@ describe('useFileLevelTokens', () => {
 
     await waitFor(() => {
       const tokens = result.current.getNewTokens?.(7) ?? [];
-      expect(tokens.some((t) => t.types.includes('string') && t.content === "'hello'")).toBe(true);
+      expect(tokens.some((t) => t.content === "'hello'")).toBe(true);
     });
 
     const fetchCallsAfterFirstLoad = vi.mocked(global.fetch).mock.calls.length;
@@ -242,9 +242,7 @@ describe('useFileLevelTokens', () => {
 
     await waitFor(() => {
       const tokens = result.current.getNewTokens?.(7) ?? [];
-      expect(tokens.some((t) => t.types.includes('string') && t.content === "'updated'")).toBe(
-        true,
-      );
+      expect(tokens.some((t) => t.content === "'updated'")).toBe(true);
     });
 
     expect(vi.mocked(global.fetch).mock.calls.length).toBeGreaterThan(fetchCallsAfterFirstLoad);

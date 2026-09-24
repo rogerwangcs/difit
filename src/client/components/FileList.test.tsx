@@ -28,6 +28,28 @@ function getLabel(title: string): HTMLElement {
 }
 
 describe('FileList', () => {
+  it('colors file icons green, red, or gray by diff status', () => {
+    render(
+      <FileList
+        files={[
+          { ...createFile('src/new.ts'), status: 'added', path: 'src/new.ts' },
+          { ...createFile('src/old.ts'), status: 'deleted', path: 'src/old.ts' },
+          createFile('src/changed.ts'),
+        ]}
+        onScrollToFile={vi.fn()}
+        comments={[]}
+        reviewedFiles={new Set()}
+        onToggleReviewed={vi.fn()}
+        onToggleFolderReviewed={vi.fn()}
+        selectedFileIndex={null}
+      />,
+    );
+
+    expect(getTreeRow('src/new.ts').querySelector('.file-tree-icon-added')).not.toBeNull();
+    expect(getTreeRow('src/old.ts').querySelector('.file-tree-icon-deleted')).not.toBeNull();
+    expect(getTreeRow('src/changed.ts').querySelector('.file-tree-icon-modified')).not.toBeNull();
+  });
+
   it('renders total additions and deletions beside the file count', () => {
     render(
       <FileList

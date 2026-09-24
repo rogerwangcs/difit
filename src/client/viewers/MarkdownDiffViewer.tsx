@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import type { DiffFile, DiffLine } from '../../types/diff';
 import { FrontmatterTable } from '../components/FrontmatterTable';
 import { MermaidDiagram } from '../components/MermaidDiagram';
-import { PrismSyntaxHighlighter } from '../components/PrismSyntaxHighlighter';
+import { ShikiSyntaxHighlighter } from '../components/ShikiSyntaxHighlighter';
 import type { MergedChunk } from '../hooks/useExpandedLines';
 import { extractFrontmatter, getFrontmatterLines } from '../utils/frontmatter';
 import { computeFrontmatterDiff } from '../utils/frontmatterDiff';
@@ -293,7 +293,7 @@ const getMarkdownComponents = (syntaxTheme?: DiffViewerBodyProps['syntaxTheme'])
 
     return (
       <pre className="markdown-preview-code border border-github-border bg-github-bg-secondary p-3 overflow-x-auto text-sm">
-        <PrismSyntaxHighlighter
+        <ShikiSyntaxHighlighter
           code={normalizedCodeText}
           language={language}
           syntaxTheme={syntaxTheme}

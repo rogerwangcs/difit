@@ -38,13 +38,18 @@ interface TreeNode {
   file?: DiffFile;
 }
 
-const TREE_ROW_PADDING_LEFT_PX = 16;
-const TREE_ICON_SIZE_PX = 16;
-const TREE_ROW_GAP_PX = 8;
-const TREE_INDENT_STEP_PX = TREE_ICON_SIZE_PX + TREE_ROW_GAP_PX;
+function TreeIndentGuides({ depth }: { depth: number }) {
+  if (depth === 0) {
+    return null;
+  }
 
-function getTreeRowPaddingLeft(depth: number): string {
-  return `${depth * TREE_INDENT_STEP_PX + TREE_ROW_PADDING_LEFT_PX}px`;
+  return (
+    <div className="flex h-full shrink-0 self-stretch" aria-hidden="true">
+      {Array.from({ length: depth }, (_, index) => (
+        <span key={index} className="file-tree-level-guide" />
+      ))}
+    </div>
+  );
 }
 
 function getAllDirectoryPaths(node: TreeNode): string[] {
@@ -247,15 +252,17 @@ export const FileList = memo(function FileList({
   }, [fileTree, filterText]);
 
   const getFileIcon = (status: DiffFile['status']) => {
+    const iconProps = { size: 16, strokeWidth: 2, className: 'shrink-0' };
+
     switch (status) {
       case 'added':
-        return <FilePlus size={16} className="text-github-accent" />;
+        return <FilePlus {...iconProps} className="file-tree-icon-added shrink-0" />;
       case 'deleted':
-        return <FileX size={16} className="text-github-danger" />;
+        return <FileX {...iconProps} className="file-tree-icon-deleted shrink-0" />;
       case 'renamed':
-        return <FilePen size={16} className="text-github-warning" />;
+        return <FilePen {...iconProps} className="file-tree-icon-modified shrink-0" />;
       default:
-        return <FileDiff size={16} className="text-github-text-secondary" />;
+        return <FileDiff {...iconProps} className="file-tree-icon-modified shrink-0" />;
     }
   };
 
@@ -346,14 +353,13 @@ export const FileList = memo(function FileList({
         >
           {node.name && (
             <div
-              className={`${shouldUseStickyDirectoryHeaders ? 'sticky ' : ''}group flex h-9 items-center gap-2 bg-github-bg-secondary px-4 hover:bg-github-bg-tertiary cursor-pointer ${
+              className={`${shouldUseStickyDirectoryHeaders ? 'sticky ' : ''}group flex min-h-8 items-stretch pr-3 hover:bg-github-bg-tertiary cursor-pointer bg-github-bg-secondary ${
                 isReviewed ? 'opacity-70' : ''
               }`}
               data-dir-header="true"
               data-tree-row="true"
               data-depth={depth}
               style={{
-                paddingLeft: getTreeRowPaddingLeft(depth),
                 top: shouldUseStickyDirectoryHeaders
                   ? `calc(${depth} * var(--dir-row-height))`
                   : undefined,
@@ -361,34 +367,39 @@ export const FileList = memo(function FileList({
               }}
               onClick={(event) => handleDirectoryClick(event, node.path)}
             >
-              {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              <span className="flex items-center group-hover:hidden">
-                {isExpanded ? (
-                  <FolderOpen size={16} className="text-github-text-secondary" />
-                ) : (
-                  <Folder size={16} className="text-github-text-secondary" />
-                )}
-              </span>
-              <span className="hidden items-center pl-[2px] group-hover:flex">
-                <Checkbox
-                  checked={isReviewed}
-                  onChange={() => {
-                    onToggleFolderReviewed(node.path, !isReviewed);
-                  }}
-                  title={
-                    isReviewed ? 'Mark all files as not reviewed' : 'Mark all files as reviewed'
-                  }
-                  className="z-10"
-                />
-              </span>
-              <span
-                className={`text-sm text-github-text-primary font-medium flex-1 overflow-hidden text-ellipsis whitespace-nowrap ${
-                  isReviewed ? 'line-through text-github-text-muted' : ''
-                }`}
-                title={node.name}
-              >
-                {node.name}
-              </span>
+              <TreeIndentGuides depth={depth} />
+              <div className="flex min-w-0 flex-1 items-center gap-1 pl-1">
+                <span className="shrink-0 text-code-line-number">
+                  {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                </span>
+                <span className="flex shrink-0 items-center group-hover:hidden">
+                  {isExpanded ? (
+                    <FolderOpen size={16} className="text-code-line-number" />
+                  ) : (
+                    <Folder size={16} className="text-code-line-number" />
+                  )}
+                </span>
+                <span className="hidden shrink-0 items-center group-hover:flex">
+                  <Checkbox
+                    checked={isReviewed}
+                    onChange={() => {
+                      onToggleFolderReviewed(node.path, !isReviewed);
+                    }}
+                    title={
+                      isReviewed ? 'Mark all files as not reviewed' : 'Mark all files as reviewed'
+                    }
+                    className="z-10"
+                  />
+                </span>
+                <span
+                  className={`min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-github-text-primary ${
+                    isReviewed ? 'line-through text-github-text-muted' : ''
+                  }`}
+                  title={node.name}
+                >
+                  {node.name}
+                </span>
+              </div>
             </div>
           )}
           {(isExpanded || !node.name) &&
@@ -405,41 +416,43 @@ export const FileList = memo(function FileList({
       return (
         <div
           key={`file:${file.path}`}
-          className={`flex items-center gap-2 px-4 py-2 hover:bg-github-bg-tertiary cursor-pointer transition-colors ${
+          className={`flex min-h-8 items-stretch pr-3 hover:bg-github-bg-tertiary cursor-pointer transition-colors ${
             isReviewed ? 'opacity-70' : ''
-          } ${isSelected ? 'bg-github-bg-tertiary' : ''}`}
+          } ${isSelected ? 'file-tree-row-selected' : ''}`}
           data-file-row="true"
           data-tree-row="true"
           data-depth={depth}
-          style={{ paddingLeft: getTreeRowPaddingLeft(depth) }}
           onClick={() => {
             onScrollToFile(file.path);
             onFileSelected?.();
           }}
         >
-          <Checkbox
-            checked={isReviewed}
-            onChange={() => {
-              onToggleReviewed(file.path);
-            }}
-            title={isReviewed ? 'Mark as not reviewed' : 'Mark as reviewed'}
-            className="z-10"
-          />
-          {getFileIcon(node.file.status)}
-          <span
-            className={`text-sm text-github-text-primary flex-1 overflow-hidden text-ellipsis whitespace-nowrap ${
-              isReviewed ? 'line-through text-github-text-muted' : ''
-            }`}
-            title={node.file.path}
-          >
-            {node.name}
-          </span>
-          {commentCount > 0 && (
-            <span className="text-github-warning text-sm font-medium ml-auto flex items-center gap-1">
-              <MessageSquare size={14} />
-              {commentCount}
+          <TreeIndentGuides depth={depth} />
+          <div className="flex min-w-0 flex-1 items-center gap-1 pl-1">
+            <Checkbox
+              checked={isReviewed}
+              onChange={() => {
+                onToggleReviewed(file.path);
+              }}
+              title={isReviewed ? 'Mark as not reviewed' : 'Mark as reviewed'}
+              className="z-10 shrink-0"
+            />
+            {getFileIcon(node.file.status)}
+            <span
+              className={`min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-github-text-primary ${
+                isReviewed ? 'line-through text-github-text-muted' : ''
+              }`}
+              title={node.file.path}
+            >
+              {node.name}
             </span>
-          )}
+            {commentCount > 0 && (
+              <span className="ml-auto flex shrink-0 items-center gap-1 text-sm font-medium text-github-warning">
+                <MessageSquare size={14} />
+                {commentCount}
+              </span>
+            )}
+          </div>
         </div>
       );
     }
@@ -448,51 +461,48 @@ export const FileList = memo(function FileList({
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="px-4 py-3 border-b border-github-border bg-github-bg-tertiary">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-github-text-primary m-0">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 border-b border-github-border p-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="m-0 text-xs font-medium text-github-text-muted">
             Files changed ({files.length})
           </h3>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <span
-              className="inline-flex gap-1 text-right text-xs font-medium whitespace-nowrap"
+              className="inline-flex gap-1 whitespace-nowrap text-xs font-medium"
               title="Total additions and deletions"
               aria-label={`${diffTotals.additions} additions and ${diffTotals.deletions} deletions`}
             >
-              <span className="text-github-accent">+{diffTotals.additions}</span>
-              <span className="text-github-danger">-{diffTotals.deletions}</span>
+              <span className="text-code-accent">+{diffTotals.additions}</span>
+              <span className="text-code-danger">-{diffTotals.deletions}</span>
             </span>
             <button
               onClick={toggleAllDirectories}
-              className="p-1 hover:bg-github-bg-primary rounded transition-colors"
+              className="rounded p-1 text-code-line-number transition-colors hover:bg-github-bg-tertiary hover:text-github-text-primary"
               title={isAllExpanded ? 'Collapse all' : 'Expand all'}
             >
-              {isAllExpanded ? (
-                <ChevronsDownUp size={16} className="text-github-text-secondary" />
-              ) : (
-                <ChevronsUpDown size={16} className="text-github-text-secondary" />
-              )}
+              {isAllExpanded ? <ChevronsDownUp size={14} /> : <ChevronsUpDown size={14} />}
             </button>
           </div>
         </div>
         <div className="relative">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-github-text-muted"
+            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-code-line-number"
           />
           <input
             type="text"
-            placeholder="Filter files..."
+            placeholder="Filter files…"
+            aria-label="Filter files…"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm bg-github-bg-primary border border-github-border rounded-md focus:outline-none focus:border-github-accent text-github-text-primary placeholder-github-text-muted"
+            className="h-8 w-full rounded-md border border-github-border bg-github-bg-primary py-1.5 pl-8 pr-3 text-sm text-github-text-primary placeholder:text-code-line-number focus:border-github-text-muted focus:outline-none"
           />
         </div>
       </div>
 
       <div
-        className="flex-1 overflow-y-auto relative z-0"
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto py-1"
         style={stickyContainerStyle}
         ref={scrollContainerRef}
       >

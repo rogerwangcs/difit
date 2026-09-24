@@ -24,6 +24,18 @@ export function ReviewdSubmitButton({
         backgroundColor: 'var(--color-yellow-btn-bg)',
         color: 'var(--color-yellow-btn-text)',
         border: '1px solid var(--color-yellow-btn-border)',
+        fontWeight: 600,
+      }}
+      onMouseEnter={(e) => {
+        if (disabled) {
+          return;
+        }
+        e.currentTarget.style.backgroundColor = 'var(--color-yellow-btn-hover-bg)';
+        e.currentTarget.style.borderColor = 'var(--color-yellow-btn-hover-border)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--color-yellow-btn-bg)';
+        e.currentTarget.style.borderColor = 'var(--color-yellow-btn-border)';
       }}
       title={
         listening ? 'Send comments to the waiting agent' : 'Waiting for agent review-loop listen'

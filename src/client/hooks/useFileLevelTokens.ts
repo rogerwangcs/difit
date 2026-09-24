@@ -1,12 +1,12 @@
-import { normalizeTokens, type Token } from 'prism-react-renderer';
 import { useEffect, useMemo, useState } from 'react';
 
 import { type DiffFile } from '../../types/diff';
+import { type SyntaxHighlightToken } from '../components/ShikiSyntaxHighlighter';
 import { getPrismLanguageFromFilename } from '../utils/languageDetection';
-import { loadPrismLanguage } from '../utils/languageLoader';
-import Prism from '../utils/prism';
+import { getShikiHighlighter, highlightCodeToTokens } from '../utils/shikiHighlighter';
+import { loadShikiLanguage } from '../utils/shikiLanguageLoader';
 
-type LineTokensGetter = (lineNumber: number) => Token[] | null;
+type LineTokensGetter = (lineNumber: number) => SyntaxHighlightToken[] | null;
 
 export interface FileLevelTokens {
   getOldTokens: LineTokensGetter | null;
@@ -15,8 +15,6 @@ export interface FileLevelTokens {
 
 const EMPTY: FileLevelTokens = { getOldTokens: null, getNewTokens: null };
 
-// Whole-file tokenization is skipped for larger files so we don't pay the cost
-// of highlighting the entire blob; these fall back to per-line highlighting.
 const MAX_WHOLE_FILE_LINES = 2000;
 
 async function fetchBlobText(filePath: string, ref: string): Promise<string | null> {
@@ -31,13 +29,21 @@ async function fetchBlobText(filePath: string, ref: string): Promise<string | nu
   }
 }
 
-function tokenizeContent(content: string, language: string): Token[][] | null {
+async function tokenizeContent(
+  content: string,
+  language: string,
+): Promise<SyntaxHighlightToken[][] | null> {
   if (content.split('\n').length > MAX_WHOLE_FILE_LINES) return null;
-  const grammar = Prism.languages[language];
-  if (!grammar) return null;
+
   try {
-    const raw = Prism.tokenize(content, grammar);
-    return normalizeTokens(raw);
+    const { tokens } = await highlightCodeToTokens(content, language);
+    return tokens.map((line) =>
+      line.map((token) => ({
+        content: token.content,
+        color: token.color,
+        fontStyle: token.fontStyle,
+      })),
+    );
   } catch {
     return null;
   }
@@ -63,24 +69,21 @@ export function useFileLevelTokens({
 
   const [oldContent, setOldContent] = useState<string | null>(null);
   const [newContent, setNewContent] = useState<string | null>(null);
-  const [grammarReady, setGrammarReady] = useState<boolean>(
-    () => !enabled || !!Prism.languages[language],
-  );
+  const [grammarReady, setGrammarReady] = useState(!enabled);
 
   useEffect(() => {
     if (!enabled) return;
-    if (Prism.languages[language]) {
-      setGrammarReady(true);
-      return;
-    }
+
     let cancelled = false;
-    loadPrismLanguage(language)
+    void getShikiHighlighter()
+      .then((highlighter) => loadShikiLanguage(highlighter, language))
       .then(() => {
         if (!cancelled) setGrammarReady(true);
       })
       .catch(() => {
         if (!cancelled) setGrammarReady(false);
       });
+
     return () => {
       cancelled = true;
     };
@@ -123,14 +126,39 @@ export function useFileLevelTokens({
     isStdinDiff,
   ]);
 
-  const oldTokens = useMemo<Token[][] | null>(() => {
-    if (!enabled || !grammarReady || oldContent == null) return null;
-    return tokenizeContent(oldContent, language);
+  const [oldTokens, setOldTokens] = useState<SyntaxHighlightToken[][] | null>(null);
+  const [newTokens, setNewTokens] = useState<SyntaxHighlightToken[][] | null>(null);
+
+  useEffect(() => {
+    if (!enabled || !grammarReady || oldContent == null) {
+      setOldTokens(null);
+      return;
+    }
+
+    let cancelled = false;
+    void tokenizeContent(oldContent, language).then((tokens) => {
+      if (!cancelled) setOldTokens(tokens);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [enabled, grammarReady, oldContent, language]);
 
-  const newTokens = useMemo<Token[][] | null>(() => {
-    if (!enabled || !grammarReady || newContent == null) return null;
-    return tokenizeContent(newContent, language);
+  useEffect(() => {
+    if (!enabled || !grammarReady || newContent == null) {
+      setNewTokens(null);
+      return;
+    }
+
+    let cancelled = false;
+    void tokenizeContent(newContent, language).then((tokens) => {
+      if (!cancelled) setNewTokens(tokens);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [enabled, grammarReady, newContent, language]);
 
   return useMemo<FileLevelTokens>(() => {

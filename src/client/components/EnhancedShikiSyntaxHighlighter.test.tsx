@@ -4,18 +4,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { WordHighlightProvider } from '../contexts/WordHighlightContext';
 
-import { EnhancedPrismSyntaxHighlighter } from './EnhancedPrismSyntaxHighlighter';
+import { EnhancedShikiSyntaxHighlighter } from './EnhancedShikiSyntaxHighlighter';
 
-// Mock PrismSyntaxHighlighter
-vi.mock('./PrismSyntaxHighlighter', () => ({
-  PrismSyntaxHighlighter: ({ code, className, renderToken, onMouseOver, onMouseOut }: any) => {
-    // For tests, create tokens that may contain multiple words (like XML/HTML tags)
-    const tokens = [{ content: code, types: ['test-token'] }];
+vi.mock('./ShikiSyntaxHighlighter', () => ({
+  ShikiSyntaxHighlighter: ({ code, className, renderToken, onMouseOver, onMouseOut }: any) => {
+    const tokens = [{ content: code, color: '#ffffff' }];
     return (
       <span className={className} onMouseOver={onMouseOver} onMouseOut={onMouseOut}>
         {renderToken ? (
           tokens.map((token: any, idx: number) =>
-            renderToken(token, idx, () => ({ className: 'token' })),
+            renderToken(token, idx, () => ({ style: { color: token.color } })),
           )
         ) : (
           <span>{code}</span>
@@ -23,17 +21,15 @@ vi.mock('./PrismSyntaxHighlighter', () => ({
       </span>
     );
   },
-  setCurrentFilename: vi.fn(),
 }));
 
-// Mock useWordHighlight
 const mockUseWordHighlight = vi.fn();
 vi.mock('../contexts/WordHighlightContext', () => ({
   WordHighlightProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useWordHighlight: () => mockUseWordHighlight(),
 }));
 
-describe('EnhancedPrismSyntaxHighlighter', () => {
+describe('EnhancedShikiSyntaxHighlighter', () => {
   beforeEach(() => {
     mockUseWordHighlight.mockReturnValue({
       highlightedWord: null,
@@ -46,7 +42,7 @@ describe('EnhancedPrismSyntaxHighlighter', () => {
   it('should render code content', () => {
     render(
       <WordHighlightProvider>
-        <EnhancedPrismSyntaxHighlighter code="const hello = world" />
+        <EnhancedShikiSyntaxHighlighter code="const hello = world" />
       </WordHighlightProvider>,
     );
 
@@ -57,7 +53,7 @@ describe('EnhancedPrismSyntaxHighlighter', () => {
   it('should wrap words in spans with word-token class', () => {
     const { container } = render(
       <WordHighlightProvider>
-        <EnhancedPrismSyntaxHighlighter code="hello world" />
+        <EnhancedShikiSyntaxHighlighter code="hello world" />
       </WordHighlightProvider>,
     );
 
@@ -77,12 +73,12 @@ describe('EnhancedPrismSyntaxHighlighter', () => {
 
     const { container } = render(
       <WordHighlightProvider>
-        <EnhancedPrismSyntaxHighlighter code="hello world Hello" />
+        <EnhancedShikiSyntaxHighlighter code="hello world Hello" />
       </WordHighlightProvider>,
     );
 
     const highlightedWords = container.querySelectorAll('.word-highlight');
-    expect(highlightedWords).toHaveLength(2); // Both "hello" and "Hello"
+    expect(highlightedWords).toHaveLength(2);
   });
 
   it('should call handleMouseOver when hovering a word', () => {
@@ -96,7 +92,7 @@ describe('EnhancedPrismSyntaxHighlighter', () => {
 
     const { container } = render(
       <WordHighlightProvider>
-        <EnhancedPrismSyntaxHighlighter code="hello world" />
+        <EnhancedShikiSyntaxHighlighter code="hello world" />
       </WordHighlightProvider>,
     );
 
@@ -118,7 +114,7 @@ describe('EnhancedPrismSyntaxHighlighter', () => {
 
     const { container } = render(
       <WordHighlightProvider>
-        <EnhancedPrismSyntaxHighlighter code="hello world" />
+        <EnhancedShikiSyntaxHighlighter code="hello world" />
       </WordHighlightProvider>,
     );
 
@@ -132,7 +128,7 @@ describe('EnhancedPrismSyntaxHighlighter', () => {
   it('should handle empty code', () => {
     const { container } = render(
       <WordHighlightProvider>
-        <EnhancedPrismSyntaxHighlighter code="" />
+        <EnhancedShikiSyntaxHighlighter code="" />
       </WordHighlightProvider>,
     );
 
@@ -143,24 +139,25 @@ describe('EnhancedPrismSyntaxHighlighter', () => {
   it('should not mark symbols as word tokens', () => {
     const { container } = render(
       <WordHighlightProvider>
-        <EnhancedPrismSyntaxHighlighter code="+ - = ! @" />
+        <EnhancedShikiSyntaxHighlighter code="+ - = ! @" />
       </WordHighlightProvider>,
     );
 
     const wordTokens = container.querySelectorAll('.word-token');
-    expect(wordTokens).toHaveLength(0); // No symbols should be marked as word tokens
+    expect(wordTokens).toHaveLength(0);
+    expect(container.textContent).toBe('+ - = ! @');
   });
 
   it('should handle XML/HTML-like tokens with multiple words', () => {
     const { container } = render(
       <WordHighlightProvider>
-        <EnhancedPrismSyntaxHighlighter code="EnhancedPrismSyntaxHighlighter code" />
+        <EnhancedShikiSyntaxHighlighter code="EnhancedShikiSyntaxHighlighter code" />
       </WordHighlightProvider>,
     );
 
     const wordTokens = container.querySelectorAll('.word-token');
-    expect(wordTokens).toHaveLength(2); // Should detect both words
-    expect(wordTokens[0]).toHaveTextContent('EnhancedPrismSyntaxHighlighter');
+    expect(wordTokens).toHaveLength(2);
+    expect(wordTokens[0]).toHaveTextContent('EnhancedShikiSyntaxHighlighter');
     expect(wordTokens[1]).toHaveTextContent('code');
   });
 });

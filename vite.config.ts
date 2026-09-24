@@ -27,6 +27,10 @@ export default defineConfig({
       '@/types': resolve(__dirname, 'src/types'),
     },
   },
+  optimizeDeps: {
+    exclude: ['shiki', 'shiki/wasm'],
+  },
+  assetsInclude: ['**/*.wasm'],
   css: {
     postcss: './postcss.config.js',
   },

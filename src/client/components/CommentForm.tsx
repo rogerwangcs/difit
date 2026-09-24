@@ -1,14 +1,13 @@
 import React, { useRef, useState } from 'react';
 
 import { CommentBodyRenderer, hasSuggestionInBody } from './CommentBodyRenderer';
-import type { AppearanceSettings } from './SettingsModal';
 import { SuggestionTemplateButton } from './SuggestionTemplateButton';
 
 interface CommentFormProps {
   onSubmit: (body: string) => Promise<void>;
   onCancel: () => void;
   selectedCode?: string;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
   filename?: string;
   initialValue?: string;
   embedded?: boolean;

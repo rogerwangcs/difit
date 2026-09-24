@@ -52,7 +52,7 @@ export const DiffViewerHeader = ({
 
   return (
     <div
-      className={`bg-github-bg-secondary border-t-2 border-t-github-accent border-b border-github-border px-5 py-4 flex items-center justify-between flex-wrap gap-3 sticky top-0 z-10 ${
+      className={`bg-github-bg-secondary border-b border-github-border px-4 py-3 flex items-center justify-between flex-wrap gap-3 sticky top-0 z-10 ${
         isFocused ? 'keyboard-focused-file-header' : ''
       }`}
     >

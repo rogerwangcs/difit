@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { HotkeysProvider } from 'react-hotkeys-hook';
 import { describe, expect, it, vi } from 'vitest';
@@ -22,13 +22,11 @@ const baseSettings = {
   fontFamily:
     '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif',
   theme: 'dark' as const,
-  syntaxTheme: 'vsDark',
   editor: {
     id: 'cursor' as const,
     command: 'cursor',
     argsTemplate: '-g %file:%line',
   },
-  colorVision: 'normal' as const,
   autoViewedPatterns: [],
 };
 
@@ -47,6 +45,9 @@ describe('SettingsModal', () => {
     expect(screen.getByText('Font Size')).toBeInTheDocument();
     expect(screen.queryByText('Scroll Animation')).not.toBeInTheDocument();
     expect(screen.queryByText('Open In Editor')).not.toBeInTheDocument();
+    expect(screen.queryByText('Theme')).not.toBeInTheDocument();
+    expect(screen.queryByText('Color Vision')).not.toBeInTheDocument();
+    expect(screen.queryByText('Syntax Highlighting Theme')).not.toBeInTheDocument();
     expect(
       screen.queryByText('Theme, typography, and syntax highlighting.'),
     ).not.toBeInTheDocument();
@@ -67,38 +68,6 @@ describe('SettingsModal', () => {
     ).toBeTruthy();
     expect(screen.queryByText('Font Size')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^System/ })).toHaveAttribute('aria-pressed', 'true');
-  });
-
-  it('shows the deuteranopia explanation only while the button is hovered', async () => {
-    render(
-      <SettingsModal
-        isOpen={true}
-        onClose={vi.fn()}
-        settings={baseSettings}
-        onSettingsChange={vi.fn()}
-      />,
-      { wrapper },
-    );
-
-    expect(
-      screen.queryByText('Deuteranopia mode uses blue/orange instead of green/red for diffs.'),
-    ).not.toBeInTheDocument();
-
-    const deuteranopiaButton = screen.getByRole('button', { name: 'Deuteranopia' });
-    fireEvent.mouseEnter(deuteranopiaButton);
-
-    const tooltip = await screen.findByRole('tooltip');
-    expect(tooltip).toHaveTextContent(
-      'Deuteranopia mode uses blue/orange instead of green/red for diffs.',
-    );
-    expect(deuteranopiaButton).toHaveAttribute('aria-describedby', tooltip.id);
-
-    fireEvent.mouseLeave(deuteranopiaButton);
-
-    await waitFor(() => {
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-      expect(deuteranopiaButton).not.toHaveAttribute('aria-describedby');
-    });
   });
 
   it('displays the preset command and args as read-only inputs when a preset editor is selected', () => {

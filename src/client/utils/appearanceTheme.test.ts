@@ -22,7 +22,6 @@ const setMatchMedia = (matches: boolean) => {
 describe('appearanceTheme', () => {
   beforeEach(() => {
     localStorage.clear();
-    document.documentElement.removeAttribute('data-color-vision');
     document.documentElement.removeAttribute('data-theme');
     document.documentElement.removeAttribute('style');
     document.body.removeAttribute('style');
@@ -34,7 +33,7 @@ describe('appearanceTheme', () => {
     expect(resolveThemePreference('dark', 'light')).toBe('dark');
   });
 
-  it('bootstraps the saved light theme before app mount', () => {
+  it('bootstraps the saved light theme with Nord palette before app mount', () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
       JSON.stringify({
@@ -45,24 +44,27 @@ describe('appearanceTheme', () => {
     expect(bootstrapAppearanceTheme()).toBe('light');
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
     expect(document.documentElement.style.getPropertyValue('--color-github-bg-primary')).toBe(
-      '#ffffff',
+      '#0f1117',
     );
   });
 
-  it('bootstraps the saved color vision mode before app mount', () => {
+  it('bootstraps the saved dark theme with Nord palette before app mount', () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
       JSON.stringify({
-        colorVision: 'deuteranopia',
         theme: 'dark',
       }),
     );
 
     expect(bootstrapAppearanceTheme()).toBe('dark');
-    expect(document.documentElement.getAttribute('data-color-vision')).toBe('deuteranopia');
-    expect(document.documentElement.style.getPropertyValue('--color-diff-addition-bg')).toBe(
-      '#0c2d6b',
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(document.documentElement.style.getPropertyValue('--color-github-bg-primary')).toBe(
+      '#0f1117',
     );
+    expect(document.documentElement.style.getPropertyValue('--color-diff-addition-bg')).toBe(
+      '#23863633',
+    );
+    expect(document.documentElement.style.getPropertyValue('--color-code-primary')).toBe('#e6edf3');
   });
 
   it('resolves auto theme from system preference when no attribute is present', () => {
@@ -77,5 +79,8 @@ describe('appearanceTheme', () => {
     expect(getResolvedTheme()).toBe('light');
     expect(bootstrapAppearanceTheme()).toBe('light');
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(document.documentElement.style.getPropertyValue('--color-github-bg-primary')).toBe(
+      '#0f1117',
+    );
   });
 });

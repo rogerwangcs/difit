@@ -3,11 +3,14 @@ import React from 'react';
 import { type DiffLine, type ExpandedLine } from '../../types/diff';
 import { type DiffSegment } from '../utils/wordLevelDiff';
 
+import {
+  getUnifiedNewLineNumberClass,
+  getUnifiedOldLineNumberClass,
+} from '../utils/diffLineStyles';
+
 import { CommentButton } from './CommentButton';
 import { DiffCodeLine } from './DiffCodeLine';
 import { OpenInEditorButton } from './OpenInEditorButton';
-import type { AppearanceSettings } from './SettingsModal';
-
 interface DiffLineRowProps {
   line: DiffLine | ExpandedLine;
   index: number;
@@ -20,7 +23,7 @@ interface DiffLineRowProps {
   onMouseMove: () => void;
   onCommentButtonMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onOpenInEditor?: () => void;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
   onClick?: (e: React.MouseEvent<HTMLTableRowElement>) => void;
   filename?: string;
   diffSegments?: DiffSegment[];
@@ -74,10 +77,8 @@ export const DiffLineRow: React.FC<DiffLineRowProps> = React.memo(
         onMouseMove={onMouseMove}
         onClick={onClick}
       >
-        <td className="w-[var(--line-number-width)] min-w-[var(--line-number-width)] max-w-[var(--line-number-width)] px-2 text-right text-github-text-muted bg-github-bg-secondary border-r border-github-border select-none align-top relative">
-          {line.oldLineNumber || ''}
-        </td>
-        <td className="w-[var(--line-number-width)] min-w-[var(--line-number-width)] max-w-[var(--line-number-width)] px-2 text-right text-github-text-muted bg-github-bg-secondary border-r border-github-border select-none align-top relative overflow-visible">
+        <td className={getUnifiedOldLineNumberClass(line)}>{line.oldLineNumber || ''}</td>
+        <td className={getUnifiedNewLineNumberClass(line)}>
           <span>{line.newLineNumber || ''}</span>
           {showLineActions && (
             <>

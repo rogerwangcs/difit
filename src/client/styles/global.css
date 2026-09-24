@@ -1,28 +1,47 @@
 @import "tailwindcss";
 
 @theme {
-  --color-github-bg-primary: #0d1117;
-  --color-github-bg-secondary: #161b22;
-  --color-github-bg-tertiary: #21262d;
-  --color-github-border: #30363d;
-  --color-github-text-primary: #f0f6fc;
-  --color-github-text-secondary: #8b949e;
-  --color-github-text-muted: #6e7681;
-  --color-github-accent: #238636;
-  --color-github-danger: #da3633;
-  --color-github-warning: #d29922;
+  --color-github-bg-primary: #0f1117;
+  --color-github-bg-secondary: #0f1117;
+  --color-github-bg-tertiary: #222833;
+  --color-github-border: #252d3a;
+  --color-github-text-primary: #d8dee9;
+  --color-github-text-secondary: #d8dee9;
+  --color-github-text-muted: #4c566a;
+  --color-github-accent: #a3be8c;
+  --color-github-danger: #bf616a;
+  --color-github-warning: #ebcb8b;
 
-  --color-diff-addition-bg: #0d4429;
-  --color-diff-addition-border: #1b7c3d;
-  --color-diff-deletion-bg: #67060c;
-  --color-diff-deletion-border: #da3633;
-  --color-diff-neutral-bg: #21262d;
+  --color-code-primary: #e6edf3;
+  --color-code-line-number: #6e7681;
+  --color-code-line-number-highlight: #f0f6fc;
+  --color-code-accent: #3fb950;
+  --color-code-danger: #f85149;
+
+  --color-diff-addition-bg: #23863633;
+  --color-diff-addition-num-bg: #2ea04359;
+  --color-diff-addition-border: #2ea0434d;
+  --color-diff-deletion-bg: #da363333;
+  --color-diff-deletion-num-bg: #da363359;
+  --color-diff-deletion-border: #da36334d;
+  --color-diff-neutral-bg: #1a1e28;
   --color-diff-selected-bg: #ae7c1426;
   --color-diff-selected-border: #ae7c1466;
 
-  --color-comment-bg: #1c2128;
-  --color-comment-border: #373e47;
-  --color-comment-text: #e6edf3;
+  --color-comment-bg: #1a1e28;
+  --color-comment-border: #252d3a;
+  --color-comment-text: #d8dee9;
+
+  --color-yellow-btn-bg: #88c0d0ee;
+  --color-yellow-btn-border: #88c0d0;
+  --color-yellow-btn-text: #2e3440;
+  --color-yellow-btn-hover-bg: #88c0d0;
+  --color-yellow-btn-hover-border: #88c0d0;
+  --color-yellow-path-bg: #434c5e;
+  --color-yellow-path-text: #88c0d0;
+
+  --color-file-tree-selected-bg: #388bfd1a;
+  --file-tree-indent: 24px;
 }
 
 /* CSS Custom Properties for dynamic theming */
@@ -30,6 +49,29 @@
   --app-font-size: 14px;
   --app-font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+}
+
+.file-tree-level-guide {
+  width: var(--file-tree-indent);
+  border-right: 1px solid color-mix(in srgb, var(--color-github-border) 70%, transparent);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.file-tree-row-selected {
+  background-color: var(--color-file-tree-selected-bg);
+}
+
+.file-tree-icon-added {
+  color: #3fb950;
+}
+
+.file-tree-icon-deleted {
+  color: #f85149;
+}
+
+.file-tree-icon-modified {
+  color: #6e7681;
 }
 
 /* Global styles */

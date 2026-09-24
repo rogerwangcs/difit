@@ -57,18 +57,18 @@ describe('useAppearanceSettings', () => {
 
   describe('theme', () => {
     beforeEach(() => {
-      document.documentElement.removeAttribute('data-color-vision');
       document.documentElement.removeAttribute('data-theme');
       document.documentElement.removeAttribute('style');
       document.body.removeAttribute('style');
     });
 
-    it('updates syntax highlighting theme when auto theme follows OS changes', async () => {
+    it('applies Nord palette when auto theme follows OS changes', async () => {
       localStorage.setItem(
         APPEARANCE_STORAGE_KEY,
         JSON.stringify({
           theme: 'auto',
           syntaxTheme: 'vsDark',
+          colorVision: 'deuteranopia',
         }),
       );
       const matchMedia = setMatchMedia(true);
@@ -77,7 +77,10 @@ describe('useAppearanceSettings', () => {
 
       await waitFor(() => {
         expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-        expect(result.current.settings.syntaxTheme).toBe('vsDark');
+        expect(result.current.settings.theme).toBe('auto');
+        expect(document.documentElement.style.getPropertyValue('--color-github-bg-primary')).toBe(
+          '#0f1117',
+        );
       });
 
       act(() => {
@@ -86,12 +89,16 @@ describe('useAppearanceSettings', () => {
 
       await waitFor(() => {
         expect(document.documentElement.getAttribute('data-theme')).toBe('light');
-        expect(result.current.settings.syntaxTheme).toBe('github');
+        expect(document.documentElement.style.getPropertyValue('--color-github-bg-primary')).toBe(
+          '#0f1117',
+        );
       });
 
-      expect(JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY) ?? '{}')).toMatchObject({
-        theme: 'auto',
-        syntaxTheme: 'github',
+      await waitFor(() => {
+        const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY) ?? '{}');
+        expect(stored).toMatchObject({ theme: 'auto' });
+        expect(stored).not.toHaveProperty('syntaxTheme');
+        expect(stored).not.toHaveProperty('colorVision');
       });
     });
   });

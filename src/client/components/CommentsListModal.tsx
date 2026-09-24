@@ -5,8 +5,6 @@ import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
 import type { CommentThread } from '../../types/diff';
 
 import { CommentThreadCard } from './CommentThreadCard';
-import type { AppearanceSettings } from './SettingsModal';
-
 interface CommentsListModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,7 +16,7 @@ interface CommentsListModalProps {
   onReplyToThread: (threadId: string, body: string) => Promise<void>;
   onRemoveMessage: (threadId: string, messageId: string) => void;
   onUpdateMessage: (threadId: string, messageId: string, newBody: string) => void;
-  syntaxTheme?: AppearanceSettings['syntaxTheme'];
+  syntaxTheme?: string;
 }
 
 export function CommentsListModal({
